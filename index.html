@@ -304,12 +304,8 @@
             }
             showLoading(true, 'กำลังซิงค์ข้อมูลล่าสุด...');
             try {
-                const response = await fetch(GAS_URL, { 
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                // ⚠️ เอา headers ออกเพื่อป้องกันปัญหา CORS (เบราว์เซอร์บล็อกการโหลดข้อมูลจาก Google)
+                const response = await fetch(GAS_URL);
                 
                 if (!response.ok) throw new Error("HTTP status " + response.status);
                 
@@ -324,7 +320,7 @@
                 // Backup to LocalStorage
                 localStorage.setItem('shared_fund_backup', JSON.stringify(appState));
             } catch (error) {
-                console.warn("ไม่สามารถเชื่อมต่อฐานข้อมูลออนไลน์ได้ (กำลังใช้งานโหมดออฟไลน์บนเครื่อง):", error.message);
+                console.warn("ไม่สามารถเชื่อมต่อฐานข้อมูลออนไลน์ได้:", error.message);
                 loadLocalData(); // Fallback
             }
             showLoading(false);
@@ -350,14 +346,13 @@
                     transactions: appState.transactions
                 };
                 
-                // ใช้ text/plain เพื่อเลี่ยงปัญหา CORS Preflight ของ Google Apps Script
+                // ⚠️ ส่งข้อมูลโดยไม่ใช้ headers พิเศษ เพื่อเลี่ยงปัญหา CORS Preflight ของ Google Apps Script
                 await fetch(GAS_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
             } catch (error) {
-                console.warn("ไม่สามารถบันทึกขึ้นระบบออนไลน์ได้ (ข้อมูลถูกบันทึกในเครื่องแล้ว):", error.message);
+                console.warn("ไม่สามารถบันทึกขึ้นระบบออนไลน์ได้:", error.message);
             }
             showLoading(false);
             renderApp();

@@ -6,13 +6,14 @@
     <title>กองกลางของเรา 💖</title>
     <link id="dynamic-favicon" rel="icon" href="https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล">
     <link id="apple-icon" rel="apple-touch-icon" href="https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล">
+    <link id="manifest-link" rel="manifest" href="">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Kanit', sans-serif;
-            background-color: #fce7f3;
+            background-color: #fce7f3; /* pink-100 */
             background-image: radial-gradient(#fbcfe8 2px, transparent 2px);
             background-size: 30px 30px;
         }
@@ -25,10 +26,30 @@
         .cute-shadow {
             box-shadow: 0 10px 25px -5px rgba(244, 114, 182, 0.4);
         }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="text-gray-800 antialiased min-h-screen flex justify-center">
 
+    <!-- Mobile App Container -->
     <div class="w-full max-w-md bg-white min-h-screen relative shadow-2xl overflow-hidden flex flex-col">
         
         <!-- Header Section -->
@@ -49,11 +70,10 @@
                         <i class="fas fa-pen text-white"></i>
                     </div>
                 </div>
-                <h1 id="group-name" class="text-2xl font-semibold mt-3 text-pink-900 cursor-pointer" onclick="openSettingsModal()">
-                    ทริปเที่ยวทะเล 🏖️ <i class="fas fa-pen text-sm opacity-50 hidden" id="edit-name-icon"></i>
-                </h1>
+                <h1 id="group-name" class="text-2xl font-semibold mt-3 text-pink-900 cursor-pointer" onclick="openSettingsModal()">ทริปเที่ยวทะเล 🏖️ <i class="fas fa-pen text-sm opacity-50 hidden" id="edit-name-icon"></i></h1>
                 <p class="text-sm text-pink-700 opacity-80">กองกลางของเรา</p>
                 
+                <!-- Drive Link Button -->
                 <div id="drive-link-container" class="mt-3 hidden">
                     <a href="#" id="drive-link-btn" target="_blank" class="text-xs bg-blue-50 text-blue-500 border border-blue-200 px-4 py-1.5 rounded-full font-medium shadow-sm hover:bg-blue-100 transition flex items-center gap-1.5">
                         <i class="fas fa-folder-open"></i> โฟลเดอร์สลิป (Drive)
@@ -63,6 +83,9 @@
 
             <!-- Balance Card -->
             <div class="mt-6 glass-card rounded-3xl p-5 text-center relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-16 h-16 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+                <div class="absolute -left-4 -bottom-4 w-16 h-16 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+                
                 <p class="text-sm font-medium text-gray-500 mb-1">ยอดเงินคงเหลือ</p>
                 <h2 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500" id="total-balance">฿0.00</h2>
                 
@@ -80,46 +103,59 @@
             </div>
         </div>
 
-        <!-- Main Content -->
+        <!-- Main Content (Tabs) -->
         <div class="flex-1 overflow-y-auto px-6 pt-6 pb-24 bg-white">
+            
+            <!-- Tab Navigation -->
             <div class="flex justify-center gap-4 mb-6">
                 <button onclick="switchTab('transactions')" id="tab-transactions" class="px-5 py-2 rounded-full font-medium text-white bg-pink-400 shadow-md transition">รายการ</button>
                 <button onclick="switchTab('members')" id="tab-members" class="px-5 py-2 rounded-full font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition">เพื่อนๆ</button>
             </div>
 
+            <!-- Transactions Tab -->
             <div id="view-transactions" class="space-y-4"></div>
+
+            <!-- Members Tab -->
             <div id="view-members" class="hidden space-y-3"></div>
         </div>
 
-        <!-- Floating Add Button -->
+        <!-- Admin Floating Action Button -->
         <div id="admin-actions" class="absolute bottom-6 right-6 hidden">
-            <button onclick="openTransactionModal()" class="w-14 h-14 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full text-white text-2xl cute-shadow flex items-center justify-center hover:scale-105 transition transform active:scale-95">
+            <button onclick="openTransactionModal()" class="w-14 h-14 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full text-white text-2xl cute-shadow flex items-center justify-center hover:scale-105 transition transform active:scale-95 shadow-lg">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
-
     </div>
 
-    <!-- Modals -->
+    <!-- === MODALS === -->
+
+    <!-- Global Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/60 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-sm">
+        <div class="spinner mb-4"></div>
+        <p id="loading-text" class="text-white font-medium text-lg">กำลังโหลดข้อมูล...</p>
+    </div>
+
+    <!-- Confirm Delete Modal -->
     <div id="confirm-delete-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 text-center shadow-xl">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden cute-shadow modal-enter relative p-6 text-center">
             <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl">
                 <i class="fas fa-trash-alt"></i>
             </div>
             <h3 class="text-lg font-semibold text-gray-800 mb-2">ลบรายการนี้?</h3>
-            <p class="text-sm text-gray-500 mb-6">หากลบแล้วจะไม่สามารถกู้คืนได้</p>
+            <p class="text-sm text-gray-500 mb-6">หากลบแล้วจะไม่สามารถกู้คืนได้ ยอดเงินจะถูกคำนวณใหม่</p>
             <div class="flex gap-3">
-                <button onclick="closeModal('confirm-delete-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium">ยกเลิก</button>
-                <button onclick="executeDeleteTransaction()" class="flex-1 bg-red-400 text-white rounded-xl py-2 font-medium">ลบรายการ</button>
+                <button onclick="closeModal('confirm-delete-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium hover:bg-gray-200 transition">ยกเลิก</button>
+                <button onclick="executeDeleteTransaction()" class="flex-1 bg-red-400 text-white rounded-xl py-2 font-medium hover:bg-red-500 transition">ลบรายการ</button>
             </div>
         </div>
     </div>
 
+    <!-- Add Transaction Modal -->
     <div id="transaction-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-xl">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden cute-shadow modal-enter relative">
             <div class="bg-pink-100 p-4 text-center relative">
                 <h3 id="modal-title" class="text-lg font-semibold text-pink-800">เพิ่มรายการใหม่</h3>
-                <button onclick="closeModal('transaction-modal')" class="absolute right-4 top-4 text-pink-400">
+                <button onclick="closeModal('transaction-modal')" class="absolute right-4 top-4 text-pink-400 hover:text-pink-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -127,20 +163,20 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">ประเภท</label>
                     <div class="flex bg-gray-100 rounded-xl p-1">
-                        <button type="button" id="type-income" onclick="setTxType('income')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-green-500 font-medium text-sm">รับเงิน (เพื่อนจ่าย)</button>
-                        <button type="button" id="type-expense" onclick="setTxType('expense')" class="flex-1 py-2 rounded-lg text-gray-500 font-medium text-sm">จ่ายเงิน (ใช้กองกลาง)</button>
+                        <button type="button" id="type-income" onclick="setTxType('income')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-green-500 font-medium transition text-sm">รับเงิน (เพื่อนจ่าย)</button>
+                        <button type="button" id="type-expense" onclick="setTxType('expense')" class="flex-1 py-2 rounded-lg text-gray-500 font-medium transition text-sm">จ่ายเงิน (ใช้กองกลาง)</button>
                     </div>
                 </div>
 
                 <div id="member-select-container">
                     <label class="block text-sm font-medium text-gray-600 mb-1">ใครเป็นคนจ่าย?</label>
-                    <input type="text" list="member-options" id="tx-member" placeholder="พิมพ์ชื่อ หรือ เลือก..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                    <input type="text" list="member-options" id="tx-member" placeholder="พิมพ์ชื่อ หรือ เลือกจากรายการ..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300">
                     <datalist id="member-options"></datalist>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">รายละเอียด</label>
-                    <input type="text" id="tx-note" placeholder="เช่น ค่าที่พัก" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">รายละเอียด (บันทึกช่วยจำ)</label>
+                    <input type="text" id="tx-note" placeholder="เช่น ค่าที่พัก, โอนเข้ากองกลาง" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300">
                 </div>
 
                 <div>
@@ -148,120 +184,202 @@
                     <input type="number" id="tx-amount" step="0.01" min="0" placeholder="0.00" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-lg font-semibold text-pink-600">
                 </div>
 
-                <button id="save-tx-btn" onclick="saveTransaction()" class="w-full bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl py-3 font-semibold text-lg hover:opacity-90 transition">
+                <button id="save-tx-btn" onclick="saveTransaction()" class="w-full bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl py-3 font-semibold text-lg hover:opacity-90 transition mt-2">
                     บันทึกรายการ
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="password-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 text-center shadow-xl">
-            <h3 class="text-lg font-semibold text-pink-800 mb-2">ยืนยันตัวตนแอดมิน 🔒</h3>
-            <input type="password" id="admin-password-input" placeholder="รหัสผ่าน..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-center mb-2">
-            <p id="password-error" class="text-red-500 text-xs hidden mb-4">รหัสผ่านไม่ถูกต้อง!</p>
-            <div class="flex gap-3 mt-4">
-                <button onclick="closeModal('password-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium">ยกเลิก</button>
-                <button onclick="checkPassword()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium">ยืนยัน</button>
+    <!-- Member Modal -->
+    <div id="member-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden cute-shadow modal-enter relative p-6">
+            <h3 id="member-modal-title" class="text-lg font-semibold text-pink-800 mb-4 text-center">เพิ่มเพื่อน 👩‍👦</h3>
+            
+            <input type="hidden" id="old-member-name">
+            <label class="block text-sm font-medium text-gray-600 mb-1">ชื่อเพื่อน</label>
+            <input type="text" id="member-name-input" placeholder="เช่น พี่กิต..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm mb-4">
+            
+            <label class="block text-sm font-medium text-gray-600 mb-1">ยอดที่ต้องจ่ายเข้ากองกลาง (บาท)</label>
+            <input type="number" id="member-target-input" placeholder="1000" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm mb-4">
+            
+            <div class="flex gap-3">
+                <button onclick="closeModal('member-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium hover:bg-gray-200">ยกเลิก</button>
+                <button onclick="saveMember()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium hover:bg-pink-500">บันทึก</button>
             </div>
         </div>
     </div>
 
+    <!-- Password Modal -->
+    <div id="password-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden cute-shadow modal-enter relative p-6">
+            <h3 class="text-lg font-semibold text-pink-800 mb-4 text-center">ยืนยันตัวตนแอดมิน 🔒</h3>
+            <p class="text-sm text-gray-500 mb-4 text-center">กรุณากรอกรหัสผ่านเพื่อเข้าสู่โหมดจัดการ</p>
+            <input type="password" id="admin-password-input" placeholder="รหัสผ่าน..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-center mb-2">
+            <p id="password-error" class="text-red-500 text-xs text-center hidden mb-4">รหัสผ่านไม่ถูกต้อง!</p>
+            
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeModal('password-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium hover:bg-gray-200">ยกเลิก</button>
+                <button onclick="checkPassword()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium hover:bg-pink-500">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings (Edit Name & Image) Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-xl">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden cute-shadow modal-enter relative p-6">
             <h3 class="text-lg font-semibold text-pink-800 mb-4 text-center">ตั้งค่ากองกลาง ⚙️</h3>
             
             <label class="block text-sm font-medium text-gray-600 mb-1">ชื่อทริป/กลุ่ม</label>
-            <input type="text" id="trip-name-input" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-sm mb-4">
+            <input type="text" id="trip-name-input" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm mb-4">
             
             <label class="block text-sm font-medium text-gray-600 mb-1">รูปภาพ (ไอคอนหน้าจอ)</label>
-            <input type="text" id="image-url-input" placeholder="วาง URL รูปภาพ..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-sm mb-4">
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="image-url-input" placeholder="วางลิงก์รูป หรืออัปโหลด..." class="flex-1 w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm">
+                <label for="image-upload" class="bg-pink-100 text-pink-600 hover:bg-pink-200 cursor-pointer rounded-xl px-4 flex items-center justify-center transition border border-pink-200" title="อัปโหลดรูปภาพ">
+                    <i class="fas fa-upload"></i>
+                </label>
+                <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+            </div>
             
-            <label class="block text-sm font-medium text-gray-600 mb-1">ลิงก์ Google Drive (เก็บสลิป)</label>
-            <input type="text" id="drive-link-input" placeholder="https://drive.google.com/..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-sm mb-4">
+            <label class="block text-sm font-medium text-gray-600 mb-1">ลิงก์ Google Drive (สำหรับเก็บสลิป)</label>
+            <input type="text" id="drive-link-input" placeholder="https://drive.google.com/..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm mb-4">
 
             <div class="flex gap-3">
-                <button onclick="closeModal('settings-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium">ยกเลิก</button>
-                <button onclick="saveSettings()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium">บันทึก</button>
+                <button onclick="closeModal('settings-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium hover:bg-gray-200">ยกเลิก</button>
+                <button onclick="saveSettings()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium hover:bg-pink-500">บันทึก</button>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript Logic -->
     <script>
+        // ==========================================
+        // ⚠️ การตั้งค่าฐานข้อมูล Google Sheets
+        // นำ URL ของ Web App จาก Google Apps Script มาใส่ในเครื่องหมายคำพูดด้านล่าง
+        // เช่น "https://script.google.com/macros/s/AKfycby.../exec"
+        // ==========================================
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzUpV9vu_gJaOTW_LIYR9cC9qTeZy6yMiKQrBs0ov3GYz3mMUhin6V0Bz-mtHmKpzzt/exec"; 
+
+        // --- App State (สถานะแอป) ---
         let appState = {
             isAdmin: false,
-            adminToken: '',
             editingTxId: null,
             txToDelete: null,
-            groupName: '',
-            groupImage: '',
+            groupName: 'ทริปเที่ยวทะเล 🏖️',
+            groupImage: 'https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล',
             driveLink: '',
-            members: [],
-            transactions: [],
+            targetPerPerson: 1000,
+            members: [
+                { name: 'น้องส้ม', target: 1000 },
+                { name: 'พี่กิต', target: 1000 },
+                { name: 'มะปราง', target: 1000 }
+            ],
+            transactions: [
+                { id: 1, type: 'income', amount: 1000, note: 'จ่ายครบแล้ว', by: 'น้องส้ม', date: new Date().toISOString() },
+                { id: 2, type: 'income', amount: 500, note: 'จ่ายครึ่งนึงก่อน', by: 'พี่กิต', date: new Date().toISOString() },
+                { id: 3, type: 'expense', amount: 850, note: 'ค่าหมูกระทะมื้อแรก', by: 'แอดมิน', date: new Date().toISOString() }
+            ],
             currentTxType: 'income'
         };
 
-        // Helper: Check if relative fetch is supported in current environment
-        function getApiUrl(endpoint) {
-            if (window.location.protocol === 'blob:' || window.location.protocol === 'file:') {
-                return null; // Local / Canvas Preview mode
+        // --- Loading UI ---
+        function showLoading(show, text = 'กำลังโหลดข้อมูล...') {
+            const overlay = document.getElementById('loading-overlay');
+            const textEl = document.getElementById('loading-text');
+            if (show) {
+                textEl.textContent = text;
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
             }
-            return endpoint;
         }
 
-        // Fetch API Data from Cloudflare Worker
-        async function fetchState() {
-            const apiUrl = getApiUrl('/api/state');
-            if (!apiUrl) {
-                // Fallback to local default data in preview environments
-                loadPreviewFallbackState();
+        // --- Database Sync Functions ---
+        async function fetchCloudData() {
+            if (!GAS_URL || GAS_URL.trim() === "") {
+                loadLocalData();
+                renderApp();
                 return;
             }
-
+            showLoading(true, 'กำลังซิงค์ข้อมูลล่าสุด...');
             try {
-                const res = await fetch(apiUrl);
-                const data = await res.json();
-                appState.groupName = data.groupName;
-                appState.groupImage = data.groupImage;
-                appState.driveLink = data.driveLink;
-                appState.members = data.members;
-                appState.transactions = data.transactions;
-
-                document.getElementById('group-name').innerHTML = `${appState.groupName} <i class="fas fa-pen text-sm opacity-50 ${appState.isAdmin ? '' : 'hidden'}" id="edit-name-icon"></i>`;
-                document.getElementById('group-image').src = appState.groupImage;
+                const response = await fetch(GAS_URL, { 
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 
-                renderApp();
-            } catch (err) {
-                console.warn("Failed to load Cloudflare API, using fallback:", err);
-                loadPreviewFallbackState();
+                if (!response.ok) throw new Error("HTTP status " + response.status);
+                
+                const data = await response.json();
+                
+                if (data.groupName) appState.groupName = data.groupName;
+                if (data.groupImage) appState.groupImage = data.groupImage;
+                if (data.driveLink !== undefined) appState.driveLink = data.driveLink;
+                if (data.members && data.members.length > 0) appState.members = data.members;
+                if (data.transactions) appState.transactions = data.transactions;
+                
+                // Backup to LocalStorage
+                localStorage.setItem('shared_fund_backup', JSON.stringify(appState));
+            } catch (error) {
+                console.warn("ไม่สามารถเชื่อมต่อฐานข้อมูลออนไลน์ได้ (กำลังใช้งานโหมดออฟไลน์บนเครื่อง):", error.message);
+                loadLocalData(); // Fallback
             }
-        }
-
-        function loadPreviewFallbackState() {
-            appState.groupName = appState.groupName || 'ทริปเที่ยวทะเล 🏖️';
-            appState.groupImage = appState.groupImage || 'https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล';
-            appState.driveLink = appState.driveLink || 'https://drive.google.com/drive/folders/1leylXNK7GyjKO1MISxYaSCiaQP65_mgo?usp=drive_link';
-            if (appState.members.length === 0) {
-                appState.members = [
-                    { id: 1, name: 'น้องส้ม', target: 1000 },
-                    { id: 2, name: 'พี่กิต', target: 1000 },
-                    { id: 3, name: 'มะปราง', target: 1000 }
-                ];
-            }
-            if (appState.transactions.length === 0) {
-                appState.transactions = [
-                    { id: 1, type: 'income', amount: 1000, note: 'จ่ายครบแล้ว', by: 'น้องส้ม', date: new Date().toISOString() },
-                    { id: 2, type: 'income', amount: 500, note: 'จ่ายครึ่งนึงก่อน', by: 'พี่กิต', date: new Date().toISOString() },
-                    { id: 3, type: 'expense', amount: 850, note: 'ค่าหมูกระทะมื้อแรก', by: 'แอดมิน', date: new Date().toISOString() }
-                ];
-            }
-            document.getElementById('group-name').innerHTML = `${appState.groupName} <i class="fas fa-pen text-sm opacity-50 ${appState.isAdmin ? '' : 'hidden'}" id="edit-name-icon"></i>`;
-            document.getElementById('group-image').src = appState.groupImage;
+            showLoading(false);
             renderApp();
         }
 
+        async function saveCloudData() {
+            // Backup locally first
+            localStorage.setItem('shared_fund_backup', JSON.stringify(appState));
+            
+            if (!GAS_URL || GAS_URL.trim() === "") {
+                renderApp();
+                return;
+            }
+            
+            showLoading(true, 'กำลังบันทึกข้อมูล...');
+            try {
+                const payload = {
+                    groupName: appState.groupName,
+                    groupImage: appState.groupImage,
+                    driveLink: appState.driveLink,
+                    members: appState.members,
+                    transactions: appState.transactions
+                };
+                
+                // ใช้ text/plain เพื่อเลี่ยงปัญหา CORS Preflight ของ Google Apps Script
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.warn("ไม่สามารถบันทึกขึ้นระบบออนไลน์ได้ (ข้อมูลถูกบันทึกในเครื่องแล้ว):", error.message);
+            }
+            showLoading(false);
+            renderApp();
+        }
+
+        function loadLocalData() {
+            const localData = localStorage.getItem('shared_fund_backup');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    appState.groupName = parsed.groupName || appState.groupName;
+                    appState.groupImage = parsed.groupImage || appState.groupImage;
+                    appState.driveLink = parsed.driveLink !== undefined ? parsed.driveLink : appState.driveLink;
+                    appState.members = parsed.members || appState.members;
+                    appState.transactions = parsed.transactions || appState.transactions;
+                } catch(e) {}
+            }
+        }
+
+        // --- Core Functions ---
         function formatMoney(amount) {
-            return '฿' + (amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return '฿' + amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function calculateTotals() {
@@ -276,260 +394,449 @@
                     expense += tx.amount;
                 }
             });
-
             return { income, expense, balance: income - expense, memberPaid };
         }
 
         function renderApp() {
+            // อัปเดตข้อมูลส่วนหัว
+            document.getElementById('group-name').innerHTML = `${appState.groupName} <i class="fas fa-pen text-sm opacity-50 ${appState.isAdmin ? '' : 'hidden'}" id="edit-name-icon"></i>`;
+            const img = document.getElementById('group-image');
+            if (img.src !== appState.groupImage) img.src = appState.groupImage;
+
             const totals = calculateTotals();
+            
+            // อัปเดตยอดเงิน
             document.getElementById('total-balance').textContent = formatMoney(totals.balance);
+            document.getElementById('total-balance').className = `text-4xl font-bold ${totals.balance < 0 ? 'text-red-500' : 'text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500'}`;
             document.getElementById('total-income').textContent = formatMoney(totals.income);
             document.getElementById('total-expense').textContent = formatMoney(totals.expense);
 
+            // ปุ่ม Google Drive
             const driveContainer = document.getElementById('drive-link-container');
             const driveBtn = document.getElementById('drive-link-btn');
-            if (appState.driveLink) {
+            if (appState.driveLink && appState.driveLink.trim() !== '') {
                 driveBtn.href = appState.driveLink;
                 driveContainer.classList.remove('hidden');
             } else {
                 driveContainer.classList.add('hidden');
             }
 
-            // Transactions Render
+            // เรนเดอร์รายการ (Transactions)
             const txContainer = document.getElementById('view-transactions');
-            txContainer.innerHTML = appState.transactions.length === 0 ? '<div class="text-center text-gray-400 py-10">ยังไม่มีรายการ</div>' : '';
+            txContainer.innerHTML = '';
             
-            appState.transactions.forEach(tx => {
-                const isIncome = tx.type === 'income';
-                const icon = isIncome ? '<i class="fas fa-arrow-down text-green-500 bg-green-100 p-2 rounded-full"></i>' : '<i class="fas fa-arrow-up text-red-500 bg-red-100 p-2 rounded-full"></i>';
-                const amountColor = isIncome ? 'text-green-500' : 'text-red-500';
-                
-                const adminActions = appState.isAdmin ? `
-                    <div class="flex gap-1 ml-3 border-l pl-2 border-gray-100">
-                        <button onclick="promptDeleteTransaction(${tx.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fas fa-trash text-xs"></i></button>
+            if (appState.transactions.length === 0) {
+                txContainer.innerHTML = '<div class="text-center text-gray-400 py-10">ยังไม่มีรายการ</div>';
+            } else {
+                const sortedTx = [...appState.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+                sortedTx.forEach(tx => {
+                    const isIncome = tx.type === 'income';
+                    const icon = isIncome ? '<i class="fas fa-arrow-down text-green-500 bg-green-100 p-2 rounded-full"></i>' : '<i class="fas fa-arrow-up text-red-500 bg-red-100 p-2 rounded-full"></i>';
+                    const amountColor = isIncome ? 'text-green-500' : 'text-red-500';
+                    const sign = isIncome ? '+' : '-';
+                    
+                    let timeStr = "";
+                    if (tx.date) {
+                        const dateObj = new Date(tx.date);
+                        if (!isNaN(dateObj)) timeStr = dateObj.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                    }
+
+                    const adminActions = appState.isAdmin ? `
+                        <div class="flex flex-col gap-1 ml-3 border-l pl-3 border-gray-100">
+                            <button onclick="openTransactionModal(${tx.id})" class="text-blue-400 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="promptDeleteTransaction(${tx.id})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fas fa-trash text-xs"></i></button>
+                        </div>
+                    ` : '';
+
+                    txContainer.innerHTML += `
+                        <div class="flex items-center justify-between p-4 glass-card rounded-2xl mb-3">
+                            <div class="flex items-center gap-4 flex-1 overflow-hidden">
+                                ${icon}
+                                <div class="flex-1 truncate">
+                                    <p class="font-medium text-gray-800 truncate">${tx.note}</p>
+                                    <p class="text-xs text-gray-400">${isIncome ? 'จาก: ' + tx.by : 'แอดมินบันทึก'} • ${timeStr}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="font-semibold ${amountColor}">${sign}${formatMoney(tx.amount)}</span>
+                                ${adminActions}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // เรนเดอร์เพื่อนๆ (Members)
+            const memContainer = document.getElementById('view-members');
+            memContainer.innerHTML = '';
+            
+            if (appState.isAdmin) {
+                memContainer.innerHTML += `
+                    <button onclick="openMemberModal()" class="w-full bg-pink-50 border-2 border-pink-200 text-pink-500 rounded-2xl py-3 mb-4 border-dashed font-medium hover:bg-pink-100 transition">
+                        <i class="fas fa-plus mr-2"></i> เพิ่มเพื่อนใหม่
+                    </button>
+                `;
+            }
+
+            appState.members.forEach(member => {
+                const paid = totals.memberPaid[member.name] || 0;
+                const progress = Math.min((paid / member.target) * 100, 100);
+                const isComplete = paid >= member.target;
+
+                const adminControls = appState.isAdmin ? `
+                    <button onclick="openMemberModal('${member.name}')" class="text-blue-400 hover:text-blue-600 bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fas fa-pen text-xs"></i></button>
+                ` : '';
+
+                const quickActions = appState.isAdmin ? `
+                    <div class="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <button onclick="openTransactionModal(null, 'income', '${member.name}')" class="flex-1 bg-green-50 text-green-600 rounded-xl py-2 text-sm font-medium hover:bg-green-100 transition shadow-sm">
+                            <i class="fas fa-arrow-down mr-1"></i> รับเงิน
+                        </button>
                     </div>
                 ` : '';
 
-                txContainer.innerHTML += `
-                    <div class="flex items-center justify-between p-4 glass-card rounded-2xl">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            ${icon}
-                            <div class="truncate">
-                                <p class="font-medium text-gray-800 truncate">${tx.note}</p>
-                                <p class="text-xs text-gray-400">${isIncome ? 'จาก: ' + tx.by : 'กองกลาง'}</p>
+                memContainer.innerHTML += `
+                    <div class="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm mb-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center text-pink-500 font-bold">
+                                    ${member.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <p class="font-medium text-gray-800">${member.name}</p>
+                                        ${adminControls}
+                                    </div>
+                                    <p class="text-xs ${isComplete ? 'text-green-500' : 'text-orange-400'}">
+                                        ${isComplete ? 'จ่ายครบแล้ว 🎉' : `ยังขาดอีก ${formatMoney(member.target - paid)}`}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-700">${formatMoney(paid)}</p>
+                                <p class="text-xs text-gray-400">/ ${formatMoney(member.target)}</p>
                             </div>
                         </div>
-                        <div class="flex items-center">
-                            <span class="font-semibold ${amountColor}">${isIncome ? '+' : '-'}${formatMoney(tx.amount)}</span>
-                            ${adminActions}
+                        <div class="w-full bg-gray-100 rounded-full h-2 mt-2">
+                            <div class="bg-gradient-to-r from-pink-300 to-pink-500 h-2 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
                         </div>
+                        ${quickActions}
                     </div>
                 `;
             });
-
-            // Members Render
-            const memContainer = document.getElementById('view-members');
-            memContainer.innerHTML = '';
-            appState.members.forEach(m => {
-                const paid = totals.memberPaid[m.name] || 0;
-                const progress = Math.min((paid / m.target) * 100, 100);
-                
-                memContainer.innerHTML += `
-                    <div class="p-4 border rounded-2xl bg-white shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <p class="font-medium text-gray-800">${m.name}</p>
-                            <span class="font-semibold text-gray-700">${formatMoney(paid)} / ${formatMoney(m.target)}</span>
-                        </div>
-                        <div class="w-full bg-gray-100 rounded-full h-2">
-                            <div class="bg-pink-400 h-2 rounded-full" style="width: ${progress}%"></div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            const datalist = document.getElementById('member-options');
-            datalist.innerHTML = appState.members.map(m => `<option value="${m.name}"></option>`).join('') + '<option value="แอดมิน"></option>';
+            
+            updateMemberSelect();
+            updatePWA();
         }
 
-        function toggleAdmin() {
+        function updateMemberSelect() {
+            const datalist = document.getElementById('member-options');
+            if(!datalist) return;
+            datalist.innerHTML = '';
+            appState.members.forEach(m => { datalist.innerHTML += `<option value="${m.name}">${m.name}</option>`; });
+            datalist.innerHTML += `<option value="แอดมิน">แอดมิน</option>`;
+        }
+
+        // --- UI Interactions ---
+        window.toggleAdmin = function() {
             if (!appState.isAdmin) {
                 document.getElementById('password-modal').classList.remove('hidden');
+                document.getElementById('admin-password-input').value = '';
+                document.getElementById('password-error').classList.add('hidden');
             } else {
                 appState.isAdmin = false;
-                appState.adminToken = '';
                 updateAdminUI();
             }
-        }
+        };
 
-        async function checkPassword() {
+        window.checkPassword = function() {
             const pwd = document.getElementById('admin-password-input').value;
-            const apiUrl = getApiUrl('/api/admin/auth');
-
-            if (!apiUrl) {
-                // Local / Preview authentication
-                if (pwd === 'Noon@452656') {
-                    appState.isAdmin = true;
-                    appState.adminToken = pwd;
-                    updateAdminUI();
-                    closeModal('password-modal');
-                } else {
-                    document.getElementById('password-error').classList.remove('hidden');
-                }
-                return;
+            if (pwd === 'Noon@452656') { // รหัสผ่านแอดมิน
+                appState.isAdmin = true;
+                updateAdminUI();
+                closeModal('password-modal');
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
             }
-
-            try {
-                const res = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pwd })
-                });
-
-                if (res.ok) {
-                    appState.isAdmin = true;
-                    appState.adminToken = pwd;
-                    updateAdminUI();
-                    closeModal('password-modal');
-                } else {
-                    document.getElementById('password-error').classList.remove('hidden');
-                }
-            } catch (err) {
-                console.error("Auth fetch failed:", err);
-            }
-        }
+        };
 
         function updateAdminUI() {
             const knob = document.getElementById('admin-toggle-knob');
             const toggleBg = document.getElementById('admin-toggle');
             const roleText = document.getElementById('role-text');
             const actions = document.getElementById('admin-actions');
-            const editIcon = document.getElementById('edit-name-icon');
+            const editNameIcon = document.getElementById('edit-name-icon');
 
             if (appState.isAdmin) {
                 knob.classList.add('translate-x-5');
                 toggleBg.classList.replace('bg-gray-300', 'bg-pink-400');
                 roleText.textContent = "โหมดแอดมิน";
+                roleText.classList.replace('text-pink-600', 'text-pink-800');
+                roleText.classList.add('font-bold');
                 actions.classList.remove('hidden');
-                if (editIcon) editIcon.classList.remove('hidden');
+                if(editNameIcon) editNameIcon.classList.remove('hidden');
             } else {
                 knob.classList.remove('translate-x-5');
                 toggleBg.classList.replace('bg-pink-400', 'bg-gray-300');
                 roleText.textContent = "โหมดเพื่อน";
+                roleText.classList.replace('text-pink-800', 'text-pink-600');
+                roleText.classList.remove('font-bold');
                 actions.classList.add('hidden');
-                if (editIcon) editIcon.classList.add('hidden');
+                if(editNameIcon) editNameIcon.classList.add('hidden');
             }
             renderApp();
         }
 
-        function switchTab(tabId) {
-            document.getElementById('view-transactions').classList.toggle('hidden', tabId !== 'transactions');
-            document.getElementById('view-members').classList.toggle('hidden', tabId !== 'members');
-        }
+        window.switchTab = function(tabId) {
+            const btnTx = document.getElementById('tab-transactions');
+            const btnMem = document.getElementById('tab-members');
+            const viewTx = document.getElementById('view-transactions');
+            const viewMem = document.getElementById('view-members');
 
-        function openTransactionModal() {
+            if (tabId === 'transactions') {
+                btnTx.className = "px-5 py-2 rounded-full font-medium text-white bg-pink-400 shadow-md transition";
+                btnMem.className = "px-5 py-2 rounded-full font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition";
+                viewTx.classList.remove('hidden');
+                viewMem.classList.add('hidden');
+            } else {
+                btnMem.className = "px-5 py-2 rounded-full font-medium text-white bg-pink-400 shadow-md transition";
+                btnTx.className = "px-5 py-2 rounded-full font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition";
+                viewMem.classList.remove('hidden');
+                viewTx.classList.add('hidden');
+            }
+        };
+
+        window.openTransactionModal = function(txId = null, prefillType = null, prefillMember = null) {
+            if(!appState.isAdmin) return;
             document.getElementById('transaction-modal').classList.remove('hidden');
-        }
+            
+            const titleEl = document.getElementById('modal-title');
+            
+            if (txId) {
+                appState.editingTxId = txId;
+                titleEl.textContent = 'แก้ไขรายการ';
+                
+                const tx = appState.transactions.find(t => t.id === txId);
+                if (tx) {
+                    window.setTxType(tx.type);
+                    document.getElementById('tx-note').value = tx.note;
+                    document.getElementById('tx-amount').value = tx.amount;
+                    document.getElementById('tx-member').value = tx.type === 'income' ? tx.by : '';
+                }
+            } else {
+                appState.editingTxId = null;
+                titleEl.textContent = 'เพิ่มรายการใหม่';
+                
+                window.setTxType(prefillType || 'income');
+                document.getElementById('tx-note').value = '';
+                document.getElementById('tx-amount').value = '';
+                
+                if (prefillMember) {
+                    document.getElementById('tx-member').value = prefillMember;
+                } else if (appState.members.length > 0) {
+                    document.getElementById('tx-member').value = appState.members[0].name;
+                }
+            }
+        };
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
+        window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); };
 
-        function setTxType(type) {
+        window.promptDeleteTransaction = function(txId) {
+            if (!appState.isAdmin) return;
+            appState.txToDelete = txId;
+            document.getElementById('confirm-delete-modal').classList.remove('hidden');
+        };
+
+        window.executeDeleteTransaction = function() {
+            if (appState.txToDelete) {
+                appState.transactions = appState.transactions.filter(t => t.id !== appState.txToDelete);
+                appState.txToDelete = null;
+                saveCloudData();
+                window.closeModal('confirm-delete-modal');
+            }
+        };
+
+        window.setTxType = function(type) {
             appState.currentTxType = type;
-            document.getElementById('type-income').className = type === 'income' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm text-green-500 font-medium text-sm' : 'flex-1 py-2 rounded-lg text-gray-500 font-medium text-sm';
-            document.getElementById('type-expense').className = type === 'expense' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm text-red-500 font-medium text-sm' : 'flex-1 py-2 rounded-lg text-gray-500 font-medium text-sm';
-            document.getElementById('member-select-container').style.display = type === 'income' ? 'block' : 'none';
-        }
+            const btnInc = document.getElementById('type-income');
+            const btnExp = document.getElementById('type-expense');
+            const memberSelect = document.getElementById('member-select-container');
 
-        async function saveTransaction() {
+            if (type === 'income') {
+                btnInc.className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-green-500 font-medium transition text-sm";
+                btnExp.className = "flex-1 py-2 rounded-lg text-gray-500 font-medium transition text-sm bg-transparent hover:bg-gray-50";
+                memberSelect.style.display = 'block';
+            } else {
+                btnExp.className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-red-500 font-medium transition text-sm";
+                btnInc.className = "flex-1 py-2 rounded-lg text-gray-500 font-medium transition text-sm bg-transparent hover:bg-gray-50";
+                memberSelect.style.display = 'none';
+            }
+        };
+
+        window.saveTransaction = function() {
             const note = document.getElementById('tx-note').value.trim();
             const amount = parseFloat(document.getElementById('tx-amount').value);
-            const by = document.getElementById('tx-member').value.trim() || 'แอดมิน';
+            let member = document.getElementById('tx-member').value.trim();
+            const btn = document.getElementById('save-tx-btn');
 
-            if (!note || isNaN(amount) || amount <= 0) return;
+            if (!note || isNaN(amount) || amount <= 0 || (appState.currentTxType === 'income' && !member)) {
+                const origText = btn.textContent;
+                btn.textContent = 'กรุณากรอกข้อมูลให้ครบ!';
+                btn.classList.add('from-red-400', 'to-red-500');
+                setTimeout(() => {
+                    btn.textContent = origText;
+                    btn.classList.remove('from-red-400', 'to-red-500');
+                }, 2000);
+                return;
+            }
 
-            const apiUrl = getApiUrl('/api/transactions');
-            if (apiUrl) {
-                await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': appState.adminToken
-                    },
-                    body: JSON.stringify({ type: appState.currentTxType, amount, note, by })
-                });
+            // หากเป็นการรับเงินและชื่อไม่มีในระบบ ให้เพิ่มเป็นเพื่อนใหม่
+            if (appState.currentTxType === 'income' && member !== 'แอดมิน') {
+                if (!appState.members.find(m => m.name === member)) {
+                    appState.members.push({ name: member, target: appState.targetPerPerson });
+                }
+            }
+
+            if (appState.editingTxId) {
+                const txIndex = appState.transactions.findIndex(t => t.id === appState.editingTxId);
+                if (txIndex > -1) {
+                    appState.transactions[txIndex].type = appState.currentTxType;
+                    appState.transactions[txIndex].amount = amount;
+                    appState.transactions[txIndex].note = note;
+                    appState.transactions[txIndex].by = appState.currentTxType === 'income' ? member : 'แอดมิน';
+                }
             } else {
-                // Local fallback save
-                appState.transactions.unshift({
+                const newTx = {
                     id: Date.now(),
                     type: appState.currentTxType,
                     amount: amount,
                     note: note,
-                    by: appState.currentTxType === 'income' ? by : 'แอดมิน',
+                    by: appState.currentTxType === 'income' ? member : 'แอดมิน',
                     date: new Date().toISOString()
-                });
+                };
+                appState.transactions.push(newTx);
             }
 
-            closeModal('transaction-modal');
-            fetchState();
-        }
+            saveCloudData();
+            window.closeModal('transaction-modal');
+        };
 
-        function promptDeleteTransaction(id) {
-            appState.txToDelete = id;
-            document.getElementById('confirm-delete-modal').classList.remove('hidden');
-        }
+        window.openMemberModal = function(memberName = null) {
+            if(!appState.isAdmin) return;
+            document.getElementById('member-modal').classList.remove('hidden');
+            const titleEl = document.getElementById('member-modal-title');
+            
+            if (memberName) {
+                titleEl.textContent = 'แก้ไขชื่อเพื่อน ✏️';
+                const member = appState.members.find(m => m.name === memberName);
+                document.getElementById('old-member-name').value = memberName;
+                document.getElementById('member-name-input').value = member.name;
+                document.getElementById('member-target-input').value = member.target;
+            } else {
+                titleEl.textContent = 'เพิ่มเพื่อนใหม่ 👩‍👦';
+                document.getElementById('old-member-name').value = '';
+                document.getElementById('member-name-input').value = '';
+                document.getElementById('member-target-input').value = appState.targetPerPerson;
+            }
+        };
 
-        async function executeDeleteTransaction() {
-            if (appState.txToDelete) {
-                const apiUrl = getApiUrl(`/api/transactions/${appState.txToDelete}`);
-                if (apiUrl) {
-                    await fetch(apiUrl, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': appState.adminToken }
-                    });
-                } else {
-                    appState.transactions = appState.transactions.filter(t => t.id !== appState.txToDelete);
+        window.saveMember = function() {
+            const oldName = document.getElementById('old-member-name').value;
+            const newName = document.getElementById('member-name-input').value.trim();
+            const target = parseFloat(document.getElementById('member-target-input').value);
+
+            if (!newName || isNaN(target) || target <= 0) return;
+
+            if (oldName) {
+                const memberIndex = appState.members.findIndex(m => m.name === oldName);
+                if (memberIndex > -1) {
+                    appState.members[memberIndex].name = newName;
+                    appState.members[memberIndex].target = target;
+                    // อัปเดตชื่อใน Transaction เดิมด้วย
+                    appState.transactions.forEach(tx => { if (tx.by === oldName) tx.by = newName; });
                 }
-                closeModal('confirm-delete-modal');
-                fetchState();
+            } else {
+                if (!appState.members.find(m => m.name === newName)) {
+                    appState.members.push({ name: newName, target: target });
+                }
             }
-        }
 
-        function openSettingsModal() {
-            if (!appState.isAdmin) return;
+            saveCloudData();
+            window.closeModal('member-modal');
+        };
+
+        window.openSettingsModal = function() {
+            if(!appState.isAdmin) return;
             document.getElementById('settings-modal').classList.remove('hidden');
             document.getElementById('trip-name-input').value = appState.groupName;
             document.getElementById('image-url-input').value = appState.groupImage;
-            document.getElementById('drive-link-input').value = appState.driveLink;
-        }
+            document.getElementById('drive-link-input').value = appState.driveLink || '';
+        };
 
-        async function saveSettings() {
-            const groupName = document.getElementById('trip-name-input').value;
-            const groupImage = document.getElementById('image-url-input').value;
-            const driveLink = document.getElementById('drive-link-input').value;
+        window.handleImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-            const apiUrl = getApiUrl('/api/settings');
-            if (apiUrl) {
-                await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': appState.adminToken
-                    },
-                    body: JSON.stringify({ groupName, groupImage, driveLink })
-                });
-            } else {
-                appState.groupName = groupName;
-                appState.groupImage = groupImage;
-                appState.driveLink = driveLink;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 256; const MAX_HEIGHT = 256;
+                    let width = img.width; let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+                    
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8); // Compress
+                    document.getElementById('image-url-input').value = dataUrl;
+                    document.getElementById('group-image').src = dataUrl;
+                }
+                img.src = e.target.result;
             }
+            reader.readAsDataURL(file);
+        };
 
-            closeModal('settings-modal');
-            fetchState();
+        window.saveSettings = function() {
+            appState.groupName = document.getElementById('trip-name-input').value || 'กองกลางของเรา';
+            appState.groupImage = document.getElementById('image-url-input').value;
+            appState.driveLink = document.getElementById('drive-link-input').value;
+            
+            saveCloudData();
+            window.closeModal('settings-modal');
+        };
+
+        function updatePWA() {
+            document.getElementById('dynamic-favicon').href = appState.groupImage;
+            document.getElementById('apple-icon').href = appState.groupImage;
+            
+            const manifest = {
+                "name": appState.groupName,
+                "short_name": appState.groupName,
+                "icons": [
+                    { "src": appState.groupImage, "sizes": "192x192", "type": "image/png" },
+                    { "src": appState.groupImage, "sizes": "512x512", "type": "image/png" }
+                ],
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#fce7f3",
+                "theme_color": "#fbcfe8"
+            };
+            
+            const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            document.getElementById('manifest-link').href = URL.createObjectURL(blob);
         }
 
-        // Initialize App State
-        fetchState();
+        // --- Start App ---
+        fetchCloudData(); // โหลดข้อมูลครั้งแรก
+
     </script>
 </body>
 </html>

@@ -255,11 +255,10 @@
     <!-- JavaScript Logic -->
     <script>
         // ==========================================
-        // ⚠️ การตั้งค่าฐานข้อมูล Google Sheets
-        // นำ URL ของ Web App จาก Google Apps Script มาใส่ในเครื่องหมายคำพูดด้านล่าง
-        // เช่น "https://script.google.com/macros/s/AKfycby.../exec"
+        // ⚠️ ลิงก์ฐานข้อมูลออนไลน์ Google Apps Script
+        // ทุกคนที่เข้าเว็บจะดึงและบันทึกข้อมูลจากที่นี่
         // ==========================================
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzUpV9vu_gJaOTW_LIYR9cC9qTeZy6yMiKQrBs0ov3GYz3mMUhin6V0Bz-mtHmKpzzt/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxgUnOnlK7p0QTNK2Ptl6TVqKby5iLg66Dc-xvoSnaDEUo2AGFjXbIfDPtn_Zwi7x0/exec"; 
 
         // --- App State (สถานะแอป) ---
         let appState = {
@@ -270,16 +269,8 @@
             groupImage: 'https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล',
             driveLink: '',
             targetPerPerson: 1000,
-            members: [
-                { name: 'น้องส้ม', target: 1000 },
-                { name: 'พี่กิต', target: 1000 },
-                { name: 'มะปราง', target: 1000 }
-            ],
-            transactions: [
-                { id: 1, type: 'income', amount: 1000, note: 'จ่ายครบแล้ว', by: 'น้องส้ม', date: new Date().toISOString() },
-                { id: 2, type: 'income', amount: 500, note: 'จ่ายครึ่งนึงก่อน', by: 'พี่กิต', date: new Date().toISOString() },
-                { id: 3, type: 'expense', amount: 850, note: 'ค่าหมูกระทะมื้อแรก', by: 'แอดมิน', date: new Date().toISOString() }
-            ],
+            members: [],
+            transactions: [],
             currentTxType: 'income'
         };
 
@@ -295,47 +286,33 @@
             }
         }
 
-        // --- Database Sync Functions ---
+        // --- ดึงข้อมูลจาก Google Sheets (ทุกคนเรียกใช้) ---
         async function fetchCloudData() {
-            if (!GAS_URL || GAS_URL.trim() === "") {
-                loadLocalData();
-                renderApp();
-                return;
-            }
             showLoading(true, 'กำลังซิงค์ข้อมูลล่าสุด...');
             try {
-                // ⚠️ เอา headers ออกเพื่อป้องกันปัญหา CORS (เบราว์เซอร์บล็อกการโหลดข้อมูลจาก Google)
+                // เรียกข้อมูลโดยไม่ติดเรื่อง CORS เพราะ Google ส่ง JSON กลับมา
                 const response = await fetch(GAS_URL);
-                
                 if (!response.ok) throw new Error("HTTP status " + response.status);
                 
                 const data = await response.json();
                 
+                // อัปเดต State จาก Database ออนไลน์
                 if (data.groupName) appState.groupName = data.groupName;
                 if (data.groupImage) appState.groupImage = data.groupImage;
                 if (data.driveLink !== undefined) appState.driveLink = data.driveLink;
-                if (data.members && data.members.length > 0) appState.members = data.members;
+                if (data.members) appState.members = data.members;
                 if (data.transactions) appState.transactions = data.transactions;
                 
-                // Backup to LocalStorage
-                localStorage.setItem('shared_fund_backup', JSON.stringify(appState));
             } catch (error) {
-                console.warn("ไม่สามารถเชื่อมต่อฐานข้อมูลออนไลน์ได้:", error.message);
-                loadLocalData(); // Fallback
+                console.warn("ไม่สามารถเชื่อมต่อฐานข้อมูลออนไลน์ได้ ลองเช็คลินก์ GAS_URL หรืออินเทอร์เน็ต:", error.message);
+                alert("ไม่สามารถดึงข้อมูลล่าสุดได้ ระบบอาจออฟไลน์อยู่");
             }
             showLoading(false);
             renderApp();
         }
 
+        // --- บันทึกข้อมูลขึ้น Google Sheets (เฉพาะแอดมินเรียกใช้) ---
         async function saveCloudData() {
-            // Backup locally first
-            localStorage.setItem('shared_fund_backup', JSON.stringify(appState));
-            
-            if (!GAS_URL || GAS_URL.trim() === "") {
-                renderApp();
-                return;
-            }
-            
             showLoading(true, 'กำลังบันทึกข้อมูล...');
             try {
                 const payload = {
@@ -346,35 +323,22 @@
                     transactions: appState.transactions
                 };
                 
-                // ⚠️ ส่งข้อมูลโดยไม่ใช้ headers พิเศษ เพื่อเลี่ยงปัญหา CORS Preflight ของ Google Apps Script
+                // ส่งด้วยโหมด 'text/plain' ป้องกันปัญหา CORS Preflight ใน GAS
                 await fetch(GAS_URL, {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
             } catch (error) {
                 console.warn("ไม่สามารถบันทึกขึ้นระบบออนไลน์ได้:", error.message);
+                alert("การบันทึกข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง");
             }
             showLoading(false);
-            renderApp();
+            renderApp(); // อัปเดตหน้าจอแอดมิน
         }
 
-        function loadLocalData() {
-            const localData = localStorage.getItem('shared_fund_backup');
-            if (localData) {
-                try {
-                    const parsed = JSON.parse(localData);
-                    appState.groupName = parsed.groupName || appState.groupName;
-                    appState.groupImage = parsed.groupImage || appState.groupImage;
-                    appState.driveLink = parsed.driveLink !== undefined ? parsed.driveLink : appState.driveLink;
-                    appState.members = parsed.members || appState.members;
-                    appState.transactions = parsed.transactions || appState.transactions;
-                } catch(e) {}
-            }
-        }
-
-        // --- Core Functions ---
+        // --- ฟังก์ชันคำนวณและแสดงผล UI ---
         function formatMoney(amount) {
-            return '฿' + amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return '฿' + (amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function calculateTotals() {
@@ -532,7 +496,7 @@
             datalist.innerHTML += `<option value="แอดมิน">แอดมิน</option>`;
         }
 
-        // --- UI Interactions ---
+        // --- ระบบล็อกอินแอดมิน ---
         window.toggleAdmin = function() {
             if (!appState.isAdmin) {
                 document.getElementById('password-modal').classList.remove('hidden');
@@ -601,6 +565,7 @@
             }
         };
 
+        // --- การจัดการข้อมูล ---
         window.openTransactionModal = function(txId = null, prefillType = null, prefillMember = null) {
             if(!appState.isAdmin) return;
             document.getElementById('transaction-modal').classList.remove('hidden');
@@ -646,7 +611,7 @@
             if (appState.txToDelete) {
                 appState.transactions = appState.transactions.filter(t => t.id !== appState.txToDelete);
                 appState.txToDelete = null;
-                saveCloudData();
+                saveCloudData(); // บันทึกออนไลน์เมื่อมีการลบ
                 window.closeModal('confirm-delete-modal');
             }
         };
@@ -685,7 +650,6 @@
                 return;
             }
 
-            // หากเป็นการรับเงินและชื่อไม่มีในระบบ ให้เพิ่มเป็นเพื่อนใหม่
             if (appState.currentTxType === 'income' && member !== 'แอดมิน') {
                 if (!appState.members.find(m => m.name === member)) {
                     appState.members.push({ name: member, target: appState.targetPerPerson });
@@ -712,7 +676,7 @@
                 appState.transactions.push(newTx);
             }
 
-            saveCloudData();
+            saveCloudData(); // บันทึกออนไลน์เมื่อเพิ่ม/แก้ไข
             window.closeModal('transaction-modal');
         };
 
@@ -747,7 +711,6 @@
                 if (memberIndex > -1) {
                     appState.members[memberIndex].name = newName;
                     appState.members[memberIndex].target = target;
-                    // อัปเดตชื่อใน Transaction เดิมด้วย
                     appState.transactions.forEach(tx => { if (tx.by === oldName) tx.by = newName; });
                 }
             } else {
@@ -756,7 +719,7 @@
                 }
             }
 
-            saveCloudData();
+            saveCloudData(); // บันทึกออนไลน์เมื่อจัดการเพื่อน
             window.closeModal('member-modal');
         };
 
@@ -790,7 +753,7 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8); // Compress
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                     document.getElementById('image-url-input').value = dataUrl;
                     document.getElementById('group-image').src = dataUrl;
                 }
@@ -804,7 +767,7 @@
             appState.groupImage = document.getElementById('image-url-input').value;
             appState.driveLink = document.getElementById('drive-link-input').value;
             
-            saveCloudData();
+            saveCloudData(); // บันทึกออนไลน์เมื่อเปลี่ยนการตั้งค่า
             window.closeModal('settings-modal');
         };
 
@@ -829,8 +792,8 @@
             document.getElementById('manifest-link').href = URL.createObjectURL(blob);
         }
 
-        // --- Start App ---
-        fetchCloudData(); // โหลดข้อมูลครั้งแรก
+        // --- เริ่มต้นทำงาน (ดึงข้อมูลล่าสุดจาก Google Sheets เมื่อเปิดหน้าเว็บ) ---
+        fetchCloudData();
 
     </script>
 </body>

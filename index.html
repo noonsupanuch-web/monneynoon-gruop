@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กองกลางของเรา 💖</title>
+    <link id="dynamic-favicon" rel="icon" href="https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล">
+    <link id="apple-icon" rel="apple-touch-icon" href="https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #fce7f3;
+            background-image: radial-gradient(#fbcfe8 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(255, 182, 193, 0.3);
+        }
+        .cute-shadow {
+            box-shadow: 0 10px 25px -5px rgba(244, 114, 182, 0.4);
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex justify-center">
+
+    <div class="w-full max-w-md bg-white min-h-screen relative shadow-2xl overflow-hidden flex flex-col">
+        
+        <!-- Header Section -->
+        <div class="bg-gradient-to-b from-pink-300 to-pink-100 rounded-b-[40px] pt-12 pb-6 px-6 relative cute-shadow z-10">
+            <!-- Admin Toggle -->
+            <div class="absolute top-4 right-4 flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full text-sm font-medium">
+                <span id="role-text" class="text-pink-600">โหมดเพื่อน</span>
+                <button id="admin-toggle" class="w-10 h-5 bg-gray-300 rounded-full relative transition-colors duration-300 focus:outline-none" onclick="toggleAdmin()">
+                    <div id="admin-toggle-knob" class="w-4 h-4 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 shadow-sm"></div>
+                </button>
+            </div>
+
+            <!-- Group Info -->
+            <div class="flex flex-col items-center mt-4 text-center">
+                <div class="relative group cursor-pointer" onclick="openSettingsModal()">
+                    <img id="group-image" src="https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล" alt="Group Image" class="w-24 h-24 rounded-full object-cover border-4 border-white cute-shadow transition transform group-hover:scale-105">
+                    <div class="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fas fa-pen text-white"></i>
+                    </div>
+                </div>
+                <h1 id="group-name" class="text-2xl font-semibold mt-3 text-pink-900 cursor-pointer" onclick="openSettingsModal()">
+                    ทริปเที่ยวทะเล 🏖️ <i class="fas fa-pen text-sm opacity-50 hidden" id="edit-name-icon"></i>
+                </h1>
+                <p class="text-sm text-pink-700 opacity-80">กองกลางของเรา</p>
+                
+                <div id="drive-link-container" class="mt-3 hidden">
+                    <a href="#" id="drive-link-btn" target="_blank" class="text-xs bg-blue-50 text-blue-500 border border-blue-200 px-4 py-1.5 rounded-full font-medium shadow-sm hover:bg-blue-100 transition flex items-center gap-1.5">
+                        <i class="fas fa-folder-open"></i> โฟลเดอร์สลิป (Drive)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Balance Card -->
+            <div class="mt-6 glass-card rounded-3xl p-5 text-center relative overflow-hidden">
+                <p class="text-sm font-medium text-gray-500 mb-1">ยอดเงินคงเหลือ</p>
+                <h2 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500" id="total-balance">฿0.00</h2>
+                
+                <div class="flex justify-between mt-4 px-2 text-sm">
+                    <div class="flex flex-col items-center">
+                        <span class="text-gray-400">เก็บได้แล้ว</span>
+                        <span class="text-green-500 font-semibold" id="total-income">฿0.00</span>
+                    </div>
+                    <div class="h-8 w-px bg-gray-200"></div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-gray-400">ใช้ไปแล้ว</span>
+                        <span class="text-red-500 font-semibold" id="total-expense">฿0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto px-6 pt-6 pb-24 bg-white">
+            <div class="flex justify-center gap-4 mb-6">
+                <button onclick="switchTab('transactions')" id="tab-transactions" class="px-5 py-2 rounded-full font-medium text-white bg-pink-400 shadow-md transition">รายการ</button>
+                <button onclick="switchTab('members')" id="tab-members" class="px-5 py-2 rounded-full font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition">เพื่อนๆ</button>
+            </div>
+
+            <div id="view-transactions" class="space-y-4"></div>
+            <div id="view-members" class="hidden space-y-3"></div>
+        </div>
+
+        <!-- Floating Add Button -->
+        <div id="admin-actions" class="absolute bottom-6 right-6 hidden">
+            <button onclick="openTransactionModal()" class="w-14 h-14 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full text-white text-2xl cute-shadow flex items-center justify-center hover:scale-105 transition transform active:scale-95">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="confirm-delete-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 text-center shadow-xl">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">ลบรายการนี้?</h3>
+            <p class="text-sm text-gray-500 mb-6">หากลบแล้วจะไม่สามารถกู้คืนได้</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('confirm-delete-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium">ยกเลิก</button>
+                <button onclick="executeDeleteTransaction()" class="flex-1 bg-red-400 text-white rounded-xl py-2 font-medium">ลบรายการ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="transaction-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-xl">
+            <div class="bg-pink-100 p-4 text-center relative">
+                <h3 id="modal-title" class="text-lg font-semibold text-pink-800">เพิ่มรายการใหม่</h3>
+                <button onclick="closeModal('transaction-modal')" class="absolute right-4 top-4 text-pink-400">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">ประเภท</label>
+                    <div class="flex bg-gray-100 rounded-xl p-1">
+                        <button type="button" id="type-income" onclick="setTxType('income')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-green-500 font-medium text-sm">รับเงิน (เพื่อนจ่าย)</button>
+                        <button type="button" id="type-expense" onclick="setTxType('expense')" class="flex-1 py-2 rounded-lg text-gray-500 font-medium text-sm">จ่ายเงิน (ใช้กองกลาง)</button>
+                    </div>
+                </div>
+
+                <div id="member-select-container">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">ใครเป็นคนจ่าย?</label>
+                    <input type="text" list="member-options" id="tx-member" placeholder="พิมพ์ชื่อ หรือ เลือก..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                    <datalist id="member-options"></datalist>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">รายละเอียด</label>
+                    <input type="text" id="tx-note" placeholder="เช่น ค่าที่พัก" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">จำนวนเงิน (บาท)</label>
+                    <input type="number" id="tx-amount" step="0.01" min="0" placeholder="0.00" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-300 text-lg font-semibold text-pink-600">
+                </div>
+
+                <button id="save-tx-btn" onclick="saveTransaction()" class="w-full bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl py-3 font-semibold text-lg hover:opacity-90 transition">
+                    บันทึกรายการ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="password-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 text-center shadow-xl">
+            <h3 class="text-lg font-semibold text-pink-800 mb-2">ยืนยันตัวตนแอดมิน 🔒</h3>
+            <input type="password" id="admin-password-input" placeholder="รหัสผ่าน..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-center mb-2">
+            <p id="password-error" class="text-red-500 text-xs hidden mb-4">รหัสผ่านไม่ถูกต้อง!</p>
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeModal('password-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium">ยกเลิก</button>
+                <button onclick="checkPassword()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-xl">
+            <h3 class="text-lg font-semibold text-pink-800 mb-4 text-center">ตั้งค่ากองกลาง ⚙️</h3>
+            
+            <label class="block text-sm font-medium text-gray-600 mb-1">ชื่อทริป/กลุ่ม</label>
+            <input type="text" id="trip-name-input" class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-sm mb-4">
+            
+            <label class="block text-sm font-medium text-gray-600 mb-1">รูปภาพ (ไอคอนหน้าจอ)</label>
+            <input type="text" id="image-url-input" placeholder="วาง URL รูปภาพ..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-sm mb-4">
+            
+            <label class="block text-sm font-medium text-gray-600 mb-1">ลิงก์ Google Drive (เก็บสลิป)</label>
+            <input type="text" id="drive-link-input" placeholder="https://drive.google.com/..." class="w-full border-gray-200 border rounded-xl px-4 py-3 bg-gray-50 text-sm mb-4">
+
+            <div class="flex gap-3">
+                <button onclick="closeModal('settings-modal')" class="flex-1 bg-gray-100 text-gray-600 rounded-xl py-2 font-medium">ยกเลิก</button>
+                <button onclick="saveSettings()" class="flex-1 bg-pink-400 text-white rounded-xl py-2 font-medium">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let appState = {
+            isAdmin: false,
+            adminToken: '',
+            editingTxId: null,
+            txToDelete: null,
+            groupName: '',
+            groupImage: '',
+            driveLink: '',
+            members: [],
+            transactions: [],
+            currentTxType: 'income'
+        };
+
+        // Helper: Check if relative fetch is supported in current environment
+        function getApiUrl(endpoint) {
+            if (window.location.protocol === 'blob:' || window.location.protocol === 'file:') {
+                return null; // Local / Canvas Preview mode
+            }
+            return endpoint;
+        }
+
+        // Fetch API Data from Cloudflare Worker
+        async function fetchState() {
+            const apiUrl = getApiUrl('/api/state');
+            if (!apiUrl) {
+                // Fallback to local default data in preview environments
+                loadPreviewFallbackState();
+                return;
+            }
+
+            try {
+                const res = await fetch(apiUrl);
+                const data = await res.json();
+                appState.groupName = data.groupName;
+                appState.groupImage = data.groupImage;
+                appState.driveLink = data.driveLink;
+                appState.members = data.members;
+                appState.transactions = data.transactions;
+
+                document.getElementById('group-name').innerHTML = `${appState.groupName} <i class="fas fa-pen text-sm opacity-50 ${appState.isAdmin ? '' : 'hidden'}" id="edit-name-icon"></i>`;
+                document.getElementById('group-image').src = appState.groupImage;
+                
+                renderApp();
+            } catch (err) {
+                console.warn("Failed to load Cloudflare API, using fallback:", err);
+                loadPreviewFallbackState();
+            }
+        }
+
+        function loadPreviewFallbackState() {
+            appState.groupName = appState.groupName || 'ทริปเที่ยวทะเล 🏖️';
+            appState.groupImage = appState.groupImage || 'https://placehold.co/200x200/ff9a9e/ffffff?text=ทริป+ทะเล';
+            appState.driveLink = appState.driveLink || 'https://drive.google.com/drive/folders/1leylXNK7GyjKO1MISxYaSCiaQP65_mgo?usp=drive_link';
+            if (appState.members.length === 0) {
+                appState.members = [
+                    { id: 1, name: 'น้องส้ม', target: 1000 },
+                    { id: 2, name: 'พี่กิต', target: 1000 },
+                    { id: 3, name: 'มะปราง', target: 1000 }
+                ];
+            }
+            if (appState.transactions.length === 0) {
+                appState.transactions = [
+                    { id: 1, type: 'income', amount: 1000, note: 'จ่ายครบแล้ว', by: 'น้องส้ม', date: new Date().toISOString() },
+                    { id: 2, type: 'income', amount: 500, note: 'จ่ายครึ่งนึงก่อน', by: 'พี่กิต', date: new Date().toISOString() },
+                    { id: 3, type: 'expense', amount: 850, note: 'ค่าหมูกระทะมื้อแรก', by: 'แอดมิน', date: new Date().toISOString() }
+                ];
+            }
+            document.getElementById('group-name').innerHTML = `${appState.groupName} <i class="fas fa-pen text-sm opacity-50 ${appState.isAdmin ? '' : 'hidden'}" id="edit-name-icon"></i>`;
+            document.getElementById('group-image').src = appState.groupImage;
+            renderApp();
+        }
+
+        function formatMoney(amount) {
+            return '฿' + (amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function calculateTotals() {
+            let income = 0, expense = 0, memberPaid = {};
+            appState.members.forEach(m => memberPaid[m.name] = 0);
+
+            appState.transactions.forEach(tx => {
+                if (tx.type === 'income') {
+                    income += tx.amount;
+                    if (memberPaid[tx.by] !== undefined) memberPaid[tx.by] += tx.amount;
+                } else if (tx.type === 'expense') {
+                    expense += tx.amount;
+                }
+            });
+
+            return { income, expense, balance: income - expense, memberPaid };
+        }
+
+        function renderApp() {
+            const totals = calculateTotals();
+            document.getElementById('total-balance').textContent = formatMoney(totals.balance);
+            document.getElementById('total-income').textContent = formatMoney(totals.income);
+            document.getElementById('total-expense').textContent = formatMoney(totals.expense);
+
+            const driveContainer = document.getElementById('drive-link-container');
+            const driveBtn = document.getElementById('drive-link-btn');
+            if (appState.driveLink) {
+                driveBtn.href = appState.driveLink;
+                driveContainer.classList.remove('hidden');
+            } else {
+                driveContainer.classList.add('hidden');
+            }
+
+            // Transactions Render
+            const txContainer = document.getElementById('view-transactions');
+            txContainer.innerHTML = appState.transactions.length === 0 ? '<div class="text-center text-gray-400 py-10">ยังไม่มีรายการ</div>' : '';
+            
+            appState.transactions.forEach(tx => {
+                const isIncome = tx.type === 'income';
+                const icon = isIncome ? '<i class="fas fa-arrow-down text-green-500 bg-green-100 p-2 rounded-full"></i>' : '<i class="fas fa-arrow-up text-red-500 bg-red-100 p-2 rounded-full"></i>';
+                const amountColor = isIncome ? 'text-green-500' : 'text-red-500';
+                
+                const adminActions = appState.isAdmin ? `
+                    <div class="flex gap-1 ml-3 border-l pl-2 border-gray-100">
+                        <button onclick="promptDeleteTransaction(${tx.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fas fa-trash text-xs"></i></button>
+                    </div>
+                ` : '';
+
+                txContainer.innerHTML += `
+                    <div class="flex items-center justify-between p-4 glass-card rounded-2xl">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            ${icon}
+                            <div class="truncate">
+                                <p class="font-medium text-gray-800 truncate">${tx.note}</p>
+                                <p class="text-xs text-gray-400">${isIncome ? 'จาก: ' + tx.by : 'กองกลาง'}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-semibold ${amountColor}">${isIncome ? '+' : '-'}${formatMoney(tx.amount)}</span>
+                            ${adminActions}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Members Render
+            const memContainer = document.getElementById('view-members');
+            memContainer.innerHTML = '';
+            appState.members.forEach(m => {
+                const paid = totals.memberPaid[m.name] || 0;
+                const progress = Math.min((paid / m.target) * 100, 100);
+                
+                memContainer.innerHTML += `
+                    <div class="p-4 border rounded-2xl bg-white shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="font-medium text-gray-800">${m.name}</p>
+                            <span class="font-semibold text-gray-700">${formatMoney(paid)} / ${formatMoney(m.target)}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="bg-pink-400 h-2 rounded-full" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const datalist = document.getElementById('member-options');
+            datalist.innerHTML = appState.members.map(m => `<option value="${m.name}"></option>`).join('') + '<option value="แอดมิน"></option>';
+        }
+
+        function toggleAdmin() {
+            if (!appState.isAdmin) {
+                document.getElementById('password-modal').classList.remove('hidden');
+            } else {
+                appState.isAdmin = false;
+                appState.adminToken = '';
+                updateAdminUI();
+            }
+        }
+
+        async function checkPassword() {
+            const pwd = document.getElementById('admin-password-input').value;
+            const apiUrl = getApiUrl('/api/admin/auth');
+
+            if (!apiUrl) {
+                // Local / Preview authentication
+                if (pwd === 'Noon@452656') {
+                    appState.isAdmin = true;
+                    appState.adminToken = pwd;
+                    updateAdminUI();
+                    closeModal('password-modal');
+                } else {
+                    document.getElementById('password-error').classList.remove('hidden');
+                }
+                return;
+            }
+
+            try {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+
+                if (res.ok) {
+                    appState.isAdmin = true;
+                    appState.adminToken = pwd;
+                    updateAdminUI();
+                    closeModal('password-modal');
+                } else {
+                    document.getElementById('password-error').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Auth fetch failed:", err);
+            }
+        }
+
+        function updateAdminUI() {
+            const knob = document.getElementById('admin-toggle-knob');
+            const toggleBg = document.getElementById('admin-toggle');
+            const roleText = document.getElementById('role-text');
+            const actions = document.getElementById('admin-actions');
+            const editIcon = document.getElementById('edit-name-icon');
+
+            if (appState.isAdmin) {
+                knob.classList.add('translate-x-5');
+                toggleBg.classList.replace('bg-gray-300', 'bg-pink-400');
+                roleText.textContent = "โหมดแอดมิน";
+                actions.classList.remove('hidden');
+                if (editIcon) editIcon.classList.remove('hidden');
+            } else {
+                knob.classList.remove('translate-x-5');
+                toggleBg.classList.replace('bg-pink-400', 'bg-gray-300');
+                roleText.textContent = "โหมดเพื่อน";
+                actions.classList.add('hidden');
+                if (editIcon) editIcon.classList.add('hidden');
+            }
+            renderApp();
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('view-transactions').classList.toggle('hidden', tabId !== 'transactions');
+            document.getElementById('view-members').classList.toggle('hidden', tabId !== 'members');
+        }
+
+        function openTransactionModal() {
+            document.getElementById('transaction-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function setTxType(type) {
+            appState.currentTxType = type;
+            document.getElementById('type-income').className = type === 'income' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm text-green-500 font-medium text-sm' : 'flex-1 py-2 rounded-lg text-gray-500 font-medium text-sm';
+            document.getElementById('type-expense').className = type === 'expense' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm text-red-500 font-medium text-sm' : 'flex-1 py-2 rounded-lg text-gray-500 font-medium text-sm';
+            document.getElementById('member-select-container').style.display = type === 'income' ? 'block' : 'none';
+        }
+
+        async function saveTransaction() {
+            const note = document.getElementById('tx-note').value.trim();
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const by = document.getElementById('tx-member').value.trim() || 'แอดมิน';
+
+            if (!note || isNaN(amount) || amount <= 0) return;
+
+            const apiUrl = getApiUrl('/api/transactions');
+            if (apiUrl) {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': appState.adminToken
+                    },
+                    body: JSON.stringify({ type: appState.currentTxType, amount, note, by })
+                });
+            } else {
+                // Local fallback save
+                appState.transactions.unshift({
+                    id: Date.now(),
+                    type: appState.currentTxType,
+                    amount: amount,
+                    note: note,
+                    by: appState.currentTxType === 'income' ? by : 'แอดมิน',
+                    date: new Date().toISOString()
+                });
+            }
+
+            closeModal('transaction-modal');
+            fetchState();
+        }
+
+        function promptDeleteTransaction(id) {
+            appState.txToDelete = id;
+            document.getElementById('confirm-delete-modal').classList.remove('hidden');
+        }
+
+        async function executeDeleteTransaction() {
+            if (appState.txToDelete) {
+                const apiUrl = getApiUrl(`/api/transactions/${appState.txToDelete}`);
+                if (apiUrl) {
+                    await fetch(apiUrl, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': appState.adminToken }
+                    });
+                } else {
+                    appState.transactions = appState.transactions.filter(t => t.id !== appState.txToDelete);
+                }
+                closeModal('confirm-delete-modal');
+                fetchState();
+            }
+        }
+
+        function openSettingsModal() {
+            if (!appState.isAdmin) return;
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('trip-name-input').value = appState.groupName;
+            document.getElementById('image-url-input').value = appState.groupImage;
+            document.getElementById('drive-link-input').value = appState.driveLink;
+        }
+
+        async function saveSettings() {
+            const groupName = document.getElementById('trip-name-input').value;
+            const groupImage = document.getElementById('image-url-input').value;
+            const driveLink = document.getElementById('drive-link-input').value;
+
+            const apiUrl = getApiUrl('/api/settings');
+            if (apiUrl) {
+                await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': appState.adminToken
+                    },
+                    body: JSON.stringify({ groupName, groupImage, driveLink })
+                });
+            } else {
+                appState.groupName = groupName;
+                appState.groupImage = groupImage;
+                appState.driveLink = driveLink;
+            }
+
+            closeModal('settings-modal');
+            fetchState();
+        }
+
+        // Initialize App State
+        fetchState();
+    </script>
+</body>
+</html>
